@@ -32,6 +32,16 @@ public class Utils {
         return outUTC;
     }
 
+    public static String convertToSimpleMoscow(String dateMoscow) {
+        DateTimeFormatter DATE_TIME_FORMATTER_INPUT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+        DateTimeFormatter DATE_TIME_FORMATTER_OUTPUT = DateTimeFormatter.ofPattern("HH:mm' 'dd.MM.yy");
+        dateMoscow = dateMoscow + "+00:00";
+        OffsetDateTime dateOff = OffsetDateTime.parse(dateMoscow, DATE_TIME_FORMATTER_INPUT);
+        OffsetDateTime dateUTC = dateOff.withOffsetSameInstant(ZoneOffset.UTC);
+        String outUTC = dateUTC.format(DATE_TIME_FORMATTER_OUTPUT);
+        return outUTC;
+    }
+
     //sout листа массива
     public static void writeItOut(List<String[]> strOut) {
         System.out.println("\r\n");
@@ -58,14 +68,14 @@ public class Utils {
         return form.format(date);
     }
 
-    //deprecated 
-    public static double getTimeCoef(String startTime, String finishTime) {
+
+    public static double getSecondsBetween(String startTime, String finishTime) {
         DateTimeFormatter DATE_TIME_FORMATTER_INPUT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
         startTime = startTime + "+03:00";
         finishTime = finishTime + "+03:00";
         OffsetDateTime dateStart = OffsetDateTime.parse(startTime, DATE_TIME_FORMATTER_INPUT);
         OffsetDateTime dateFinish = OffsetDateTime.parse(finishTime, DATE_TIME_FORMATTER_INPUT);
-        return Duration.between(dateStart, dateFinish).toMinutes() / 60.0;
+        return Duration.between(dateStart, dateFinish).toMillis()/1000;
     }
 
     //считаем период на основании duration
