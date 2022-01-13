@@ -1,8 +1,7 @@
 # InfluxExporterJson
 Export influx data to json  
 Part of [data collector](https://github.com/suhoy/TestUploader) for [load testing hub](https://github.com/suhoy/cms-boot)   
-Works with influx v1.8 and java 8
-
+Works with influx v1.8 and java 8   
 
 ### Arguments
 ```java
@@ -23,7 +22,8 @@ java -jar InfluxExporterJson-1.0.jar -out .\out -name example3 -times 2022-01-10
 ```  
   
   
-### Config example
+### Config example  
+Put config.properties near jar 
 ```properties
 #connection data
 influx.url=http://localhost:8086
