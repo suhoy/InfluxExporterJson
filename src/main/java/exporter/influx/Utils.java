@@ -6,21 +6,13 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import org.apache.commons.lang3.ArrayUtils;
 import org.influxdb.dto.QueryResult;
-//import static exporter.influx.Main.debug;
 
 public class Utils {
-/*
-    public static void debugMessage(String strOut) {
-        if (debug) {
-            System.out.println(strOut);
-        }
-    }
-*/
+
     //московское время в utc (для influx)
     public static String convertToUTC(String dateMoscow) {
         DateTimeFormatter DATE_TIME_FORMATTER_INPUT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
@@ -32,6 +24,7 @@ public class Utils {
         return outUTC;
     }
 
+    //light format for moscow time
     public static String convertToSimpleMoscow(String dateMoscow) {
         DateTimeFormatter DATE_TIME_FORMATTER_INPUT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
         DateTimeFormatter DATE_TIME_FORMATTER_OUTPUT = DateTimeFormatter.ofPattern("HH:mm' 'dd.MM.yy");
@@ -68,7 +61,6 @@ public class Utils {
         return form.format(date);
     }
 
-
     public static double getSecondsBetween(String startTime, String finishTime) {
         DateTimeFormatter DATE_TIME_FORMATTER_INPUT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
         startTime = startTime + "+03:00";
@@ -96,6 +88,7 @@ public class Utils {
     }
 
     //парсилка ответа инфлюкса
+    //не используется
     public static String[][] Parse(QueryResult qr, String start, String finish, String duration, String profile) {
         //парсим заголовки таблицы
         String[] tags = qr.getResults().get(0).getSeries().get(0).getTags().keySet().toString().replace("[", "").replace("]", "").split(", ");
@@ -130,18 +123,8 @@ public class Utils {
         for (int i = offSetRows; i < countRows; i++) {
             result[i] = ArrayUtils.addAll(qr.getResults().get(0).getSeries().get(i - offSetRows).getTags().values().toString().replace("[", "").replace("]", "").split(", "), qr.getResults().get(0).getSeries().get(i - offSetRows).getValues().toString().replace("[", "").replace("]", "").split(", "));
         }
-/*
-        //вывод в лог
-        for (String[] arr : result) {
-            Utils.debugMessage(Arrays.toString(arr));
-        }
-*/
-        return result;
-    }
 
-    //убираем лишние символы для экселя
-    public static String InfluxTimeToXlsxTime(String time) {
-        return time.replace("T", " ").replace("Z", "");
+        return result;
     }
 
     public static LocalDateTime StringToLocalDateTime(String time) {
