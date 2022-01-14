@@ -252,12 +252,12 @@ public class Main {
 
     //создание фолдера для результатов
     private static void CreatefolderFilePath() {
-        String firstTime = args.get("times").get(0).replace(":", "_").replace("-", "_");
+        //String firstTime = args.get("times").get(0).replace(":", "_").replace("-", "_");
         String outdir = args.get("out").get(0);
         String outname = args.get("name").get(0);
         try {
-            String folderName = Utils.getFolder();
-            //Files.createDirectories(Paths.get(outdir + "\\" + folderName));
+            //String folderName = Utils.getFolder();
+            Files.createDirectories(Paths.get(outdir));
             //String folderFilePath = outdir + "\\" + folderName + "\\" + outname + "_" + firstTime + ".json";
             String folderFilePath = outdir + "\\" + outname;
             prop.put("out", folderFilePath);
