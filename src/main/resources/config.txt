@@ -1,12 +1,3 @@
-#  -out C:\example\out
-#  -name example1
-#  -times 2021-08-15T21:19:30 2021-08-15T21:25:30
-#  -durations 00:05:00
-#  -profiles 100 200
-
-#  -out .\out -name example1 -times 2021-08-15T21:19:30 2021-08-15T21:25:30 -durations 00:05:00 -profiles 100 200
-
-
 #connection data
 influx.url=http://localhost:8086
 influx.user=admin
