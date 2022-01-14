@@ -5,6 +5,7 @@ Works with influx v1.8 and java 8
 
 ### Arguments
 ```java
+-config     Path to config file  
 -times      Start of time periods, from 1 to N  
 -durations  Periods durations, could be 1 or N  
 -profiles   Profiles in %, could be 1 or N  
@@ -14,16 +15,15 @@ Works with influx v1.8 and java 8
 
 ### Start example
 ```java
-java -jar InfluxExporterJson-1.0.jar -out C:\example\out -times 2022-01-12T12:00:00 -durations 24:00:00 -profiles 80
+java -jar InfluxExporterJson-1.0.jar -config C:\example\config.txt -out C:\example\out -times 2022-01-12T12:00:00 -durations 24:00:00 -profiles 80
 or
-java -jar InfluxExporterJson-1.0.jar -out .\out -name example2 -times 2022-01-12T20:55:20 2022-01-12T21:01:20 -durations 00:05:00 -profiles 100 200
+java -jar InfluxExporterJson-1.0.jar -config config.txt -out .\out -name example2 -times 2022-01-12T20:55:20 2022-01-12T21:01:20 -durations 00:05:00 -profiles 100 200
 or  
-java -jar InfluxExporterJson-1.0.jar -out .\out -name example3 -times 2022-01-10T23:55:00 2022-01-11T23:55:00 2022-01-12T23:55:00 -durations 00:30:00 01:00:00 01:30:00 -profiles 150.5
+java -jar InfluxExporterJson-1.0.jar -config config.txt -out .\out -name example3 -times 2022-01-10T23:55:00 2022-01-11T23:55:00 2022-01-12T23:55:00 -durations 00:30:00 01:00:00 01:30:00 -profiles 150.5
 ```  
   
   
 ### Config example  
-Put config.properties near jar 
 ```properties
 #connection data
 influx.url=http://localhost:8086

@@ -35,7 +35,7 @@ public class Main {
             ReadParams(arg);
 
             //читаем конфиг
-            ReadProps();
+            ReadProps(args.get("config").get(0));
 
             //создаем директорию под json
             CreatefolderFilePath();
@@ -242,9 +242,12 @@ public class Main {
         }
     }
 
-    public static void ReadProps() {
+    public static void ReadProps(String config) {
         try {
-            prop.load(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties"), Charset.forName("UTF-8")));
+            //prop.load(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties"), Charset.forName("UTF-8")));
+            InputStream input = new FileInputStream(config);
+            prop.load(input);
+            input.close();
             System.out.println("\nGet config, unsorted:");
             Enumeration keys = prop.keys();
             while (keys.hasMoreElements()) {
