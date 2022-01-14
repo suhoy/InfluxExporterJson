@@ -31,6 +31,8 @@ public class Main {
 
     public static void main(String[] arg) {
         try {
+            System.out.println("\n==========InfluxExporterJson started==========");
+
             //читаем аргументы
             ReadParams(arg);
 
@@ -210,8 +212,10 @@ public class Main {
             //file.close();
             System.out.println("\nFile saved=" + prop.getProperty("out"));
 
+            System.out.println("\n==========InfluxExporterJson finished==========");
         } catch (Exception ex) {
             ex.printStackTrace();
+            System.out.println("\n==========InfluxExporterJson finished==========");
         }
     }
 
