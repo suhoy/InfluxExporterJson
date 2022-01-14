@@ -1,8 +1,8 @@
 package exporter.influx;
 
-import java.io.FileWriter;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -198,9 +198,16 @@ public class Main {
 
             //пишем и сохраняем
             System.out.println("\nResult json=" + fullja.toString());
-            file = new FileWriter(prop.getProperty("out"));
-            file.write(fullja.toString());
-            file.close();
+
+            Writer fstream = null;
+            //BufferedWriter out = null;
+            fstream = new OutputStreamWriter(new FileOutputStream(prop.getProperty("out")), StandardCharsets.UTF_8);
+            fstream.write(fullja.toString());
+            fstream.close();
+
+            //file = new FileWriter(prop.getProperty("out"));
+            //file.write(fullja.toString());
+            //file.close();
             System.out.println("\nFile saved=" + prop.getProperty("out"));
 
         } catch (Exception ex) {

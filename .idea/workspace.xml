@@ -31,8 +31,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/exporter/influx/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="491">
-              <caret line="259" column="52" selection-start-line="259" selection-start-column="52" selection-end-line="259" selection-end-column="52" />
+            <state relative-caret-position="215">
+              <caret line="197" lean-forward="true" selection-start-line="197" selection-end-line="197" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -118,15 +118,6 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/resources/config.properties">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="442">
-              <caret line="41" column="5" lean-forward="true" selection-start-line="41" selection-start-column="5" selection-end-line="41" selection-end-column="5" />
-            </state>
-          </provider>
-        </entry>
-      </file>
     </leaf>
   </component>
   <component name="Git.Settings">
@@ -189,6 +180,11 @@
             <path>
               <item name="InfluxExporter" type="b2602c69:ProjectViewProjectNode" />
               <item name="InfluxExporterJson" type="462c0819:PsiDirectoryNode" />
+              <item name="out" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="InfluxExporter" type="b2602c69:ProjectViewProjectNode" />
+              <item name="InfluxExporterJson" type="462c0819:PsiDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -235,7 +231,7 @@
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1642181056178" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1642182783653" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
@@ -256,7 +252,7 @@
     <configuration name="InfluxExporterJson" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="exporter.influx.Main" />
       <module name="InfluxExporterJson" />
-      <option name="PROGRAM_PARAMETERS" value="-out .\out -name example1 -times 2022-01-12T20:55:20 2022-01-12T21:01:20 -durations 00:05:00 -profiles 100 200" />
+      <option name="PROGRAM_PARAMETERS" value="-out .\out -name stat.json -times 2022-01-12T20:55:20 2022-01-12T21:01:20 -durations 00:05:00 -profiles 100 200" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -321,12 +317,12 @@
       <option name="presentableId" value="Default" />
       <updated>1641989949179</updated>
       <workItem from="1641989952154" duration="828000" />
-      <workItem from="1641990834883" duration="39160000" />
+      <workItem from="1641990834883" duration="40199000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="39988000" />
+    <option name="totallyTimeSpent" value="41027000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
@@ -341,7 +337,7 @@
       <window_info id="Favorites" order="6" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.20111111" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.2688889" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.35333332" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.47666666" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -478,10 +474,20 @@
         </state>
       </provider>
     </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_271/src.zip!/java/io/Writer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2259">
+          <caret line="155" column="16" selection-start-line="155" selection-start-column="16" selection-end-line="155" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/out/example1">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/exporter/influx/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="491">
-          <caret line="259" column="52" selection-start-line="259" selection-start-column="52" selection-end-line="259" selection-end-column="52" />
+        <state relative-caret-position="215">
+          <caret line="197" lean-forward="true" selection-start-line="197" selection-end-line="197" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
