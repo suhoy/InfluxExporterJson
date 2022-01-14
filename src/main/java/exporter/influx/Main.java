@@ -257,8 +257,9 @@ public class Main {
         String outname = args.get("name").get(0);
         try {
             String folderName = Utils.getFolder();
-            Files.createDirectories(Paths.get(outdir + "\\" + folderName));
-            String folderFilePath = outdir + "\\" + folderName + "\\" + outname + "_" + firstTime + ".json";
+            //Files.createDirectories(Paths.get(outdir + "\\" + folderName));
+            //String folderFilePath = outdir + "\\" + folderName + "\\" + outname + "_" + firstTime + ".json";
+            String folderFilePath = outdir + "\\" + outname;
             prop.put("out", folderFilePath);
         } catch (Exception ex) {
             ex.printStackTrace();
