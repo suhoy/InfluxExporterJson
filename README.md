@@ -68,7 +68,7 @@ tag2.function.count=count("count")
 tag2.function.time=(percentile("resp", 99.9))/1000
 
 
-#profile in tps, scripts names should be unique
+#profile in tps 100%, scripts names should be unique
 sript1name.profile=2
 sript1name.sla=1.5
 
