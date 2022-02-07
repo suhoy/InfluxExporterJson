@@ -83,9 +83,9 @@ public class Main {
 
                     //хттп клиент
                     OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient().newBuilder()
-                            .connectTimeout(40, TimeUnit.SECONDS)
-                            .readTimeout(60, TimeUnit.SECONDS)
-                            .writeTimeout(60, TimeUnit.SECONDS);
+                            .connectTimeout(10, TimeUnit.MINUTES)
+                            .readTimeout(10, TimeUnit.MINUTES)
+                            .writeTimeout(10, TimeUnit.MINUTES);
 
 
                     //коннект к инфлюксу
