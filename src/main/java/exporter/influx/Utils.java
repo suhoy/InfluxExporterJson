@@ -1,5 +1,8 @@
 package exporter.influx;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.influxdb.dto.QueryResult;
+
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -8,8 +11,6 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
-import org.apache.commons.lang3.ArrayUtils;
-import org.influxdb.dto.QueryResult;
 
 public class Utils {
 
