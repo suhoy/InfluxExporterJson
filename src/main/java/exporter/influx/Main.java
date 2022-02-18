@@ -1,5 +1,6 @@
 package exporter.influx;
 
+import com.sun.org.apache.xerces.internal.impl.dv.xs.BooleanDV;
 import okhttp3.OkHttpClient;
 import org.apache.sling.commons.json.JSONArray;
 import org.apache.sling.commons.json.JSONObject;
@@ -98,7 +99,7 @@ public class Main {
                     //периоды для tag в json
                     String strCurrentStartMoscow = Utils.convertToSimpleMoscow(time);
                     String strCurrentFinishMoscow = Utils.convertToSimpleMoscow(Utils.sumTime(time, duration));
-                    String tag = "Период " + strCurrentStartMoscow + " - " + strCurrentFinishMoscow + " , " + prop.getProperty("tag" + t + ".name") + " ("+profile+"%)";
+                    String tag = profile + "% - период " + strCurrentStartMoscow + " - " + strCurrentFinishMoscow + " , " + prop.getProperty("tag" + t + ".name");
 
                     //для профиля
                     double seconds = Utils.getSecondsBetween(time, Utils.sumTime(time, duration));
@@ -118,7 +119,7 @@ public class Main {
                         qr = influxDB.query(new Query(sql, prop.getProperty("influx.database")));
 
                         //по серии ответа (по сути идём по скриптам, по которым сгруппирован запрос)
-                        if (qr.getResults().get(0).getSeries()!=null) {
+                        if (qr.getResults().get(0).getSeries() != null) {
                             for (QueryResult.Series sr : qr.getResults().get(0).getSeries()) {
 
                                 String script_json = sr.getTags().get(prop.getProperty("sql" + s + ".script"));
@@ -148,42 +149,48 @@ public class Main {
                                 //System.out.println("script_value=" + script_value);
 
                                 //заполняем значениями json по скрипту
-                                JSONObject jo = new JSONObject();
-                                jo.put("script", script_json);
-                                jo.put("tag", tag);
-                                jo.put(script_metric, script_value);
 
-                                //берём sla для скрипта из конфига
-                                Double sla = Double.parseDouble(prop.getProperty(script_json + ".sla"));
-                                if (sla != null) {
-                                    jo.put("sla", sla);
-                                }
+                                if (prop.getProperty(script_json + ".sla") != null &&
+                                        prop.getProperty(script_json + ".profile") != null) {
 
-                                //берём профиль для скрипта из конфига
-                                String profile_calc = prop.getProperty(script_json + ".profile");
-                                //System.out.println("profile_calc="+profile_calc);
-                                //System.out.println("profile="+profile);
-                                //System.out.println("seconds="+seconds);
+                                    JSONObject jo = new JSONObject();
+                                    jo.put("script", script_json);
+                                    jo.put("tag", tag);
+                                    jo.put(script_metric, script_value);
 
-                                //расчитываем профиль
-                                if (profile_calc != null) {
-                                    long profile_teor = Math.round(Double.parseDouble(profile_calc) * Double.parseDouble(profile) / 100.0 * seconds);
-                                    jo.put("profile", profile_teor);
-                                }
+                                    //берём sla для скрипта из конфига
 
-                                //дополняем значениями из нового запросоа уже существующий json по скрипту
-                                boolean found = false;
-                                for (int j = 0; j < ja.length(); j++) {
-                                    JSONObject localjo = ja.getJSONObject(j);
-                                    if (localjo.getString("script").equals(script_json)) {
-                                        ja.getJSONObject(j).put(script_metric, script_value);
-                                        found = true;
-                                        break;
+                                    Double sla = Double.parseDouble(prop.getProperty(script_json + ".sla"));
+                                    if (sla != null) {
+                                        jo.put("sla", sla);
                                     }
-                                }
-                                //если скрипта не было в массиве - кладём всё
-                                if (!found) {
-                                    ja.put(jo);
+
+                                    //берём профиль для скрипта из конфига
+                                    String profile_calc = prop.getProperty(script_json + ".profile");
+                                    //System.out.println("profile_calc="+profile_calc);
+                                    //System.out.println("profile="+profile);
+                                    //System.out.println("seconds="+seconds);
+
+                                    //расчитываем профиль
+                                    if (profile_calc != null) {
+                                        long profile_teor = Math.round(Double.parseDouble(profile_calc) * Double.parseDouble(profile) / 100.0 * seconds);
+                                        jo.put("profile", profile_teor);
+                                    }
+
+                                    //дополняем значениями из нового запросоа уже существующий json по скрипту
+                                    boolean found = false;
+                                    for (int j = 0; j < ja.length(); j++) {
+                                        JSONObject localjo = ja.getJSONObject(j);
+                                        if (localjo.getString("script").equals(script_json)) {
+                                            ja.getJSONObject(j).put(script_metric, script_value);
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+                                    //если скрипта не было в массиве - кладём всё
+                                    if (!found) {
+                                        ja.put(jo);
+                                    }
                                 }
                                 //System.out.println("jo=" + jo.toString());
                             }
