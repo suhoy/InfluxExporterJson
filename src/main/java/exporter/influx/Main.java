@@ -16,6 +16,12 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+/*
+Example run
+java -jar InfluxExporterJson-1.1.jar -config C:\Users\suh1995\Documents\IDEA\InfluxExporterJson\src\main\resources\config.txt -out .\out -name stat.json -times 2022-01-12T20:55:20 2022-01-12T21:01:20 -durati
+ons 00:05:00 -profiles 100 200
+ */
+
 public class Main {
 
     //хранилище аргументов
@@ -74,152 +80,229 @@ public class Main {
                 System.out.println("duration=" + duration);
                 System.out.println("profile=" + profile);
 
-                //по количеству тегов
-                for (int t = 1; t < Integer.parseInt(prop.getProperty("tags.count")) + 1; t++) {
 
-                    System.out.println("\n" + h + "." + t + ") Tag: " + prop.getProperty("tag" + t + ".name"));
-                    //System.out.println("tag.name=" + prop.getProperty("tag" + t + ".name"));
-                    //System.out.println("tag.count_function=" + prop.getProperty("tag" + t + ".count_function"));
-                    //System.out.println("tag.time_function=" + prop.getProperty("tag" + t + ".time_function"));
+                //json объект под период
+                JSONObject jo_period = new JSONObject();
 
-                    //хттп клиент
-                    OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient().newBuilder()
-                            .connectTimeout(10, TimeUnit.MINUTES)
-                            .readTimeout(10, TimeUnit.MINUTES)
-                            .writeTimeout(10, TimeUnit.MINUTES);
+                //создаем start и finish в utc
+                String strCurrentStart = Utils.convertToUTC(time);
+                String strCurrentFinish = Utils.convertToUTC(Utils.sumTime(time, duration));
+
+                //для расчёта профиля
+                double seconds = Utils.getSecondsBetween(time, Utils.sumTime(time, duration));
+
+                //периоды для tag в json
+                String strCurrentStartMoscow = Utils.convertToSimpleMoscowJson(time);
+                String strCurrentFinishMoscow = Utils.convertToSimpleMoscowJson(Utils.sumTime(time, duration));
+
+                jo_period.put("time_start", strCurrentStartMoscow);
+                jo_period.put("time_finish", strCurrentFinishMoscow);
+                jo_period.put("profile", Double.parseDouble(profile));
+                jo_period.put("about", "");
 
 
-                    //коннект к инфлюксу
-                    influxDB = InfluxDBFactory.connect(prop.getProperty("influx.url"), prop.getProperty("influx.user"), prop.getProperty("influx.password"), okHttpClientBuilder);
+                //хттп клиент
+                OkHttpClient.Builder okHttpClientBuilder = new OkHttpClient().newBuilder()
+                        .connectTimeout(10, TimeUnit.MINUTES)
+                        .readTimeout(10, TimeUnit.MINUTES)
+                        .writeTimeout(10, TimeUnit.MINUTES);
 
-                    //создаем start и finish в utc
-                    String strCurrentStart = Utils.convertToUTC(time);
-                    String strCurrentFinish = Utils.convertToUTC(Utils.sumTime(time, duration));
+                //коннект к инфлюксу
+                influxDB = InfluxDBFactory.connect(prop.getProperty("influx.url"), prop.getProperty("influx.user"), prop.getProperty("influx.password"), okHttpClientBuilder);
 
-                    //периоды для tag в json
-                    String strCurrentStartMoscow = Utils.convertToSimpleMoscow(time);
-                    String strCurrentFinishMoscow = Utils.convertToSimpleMoscow(Utils.sumTime(time, duration));
-                    String tag = profile + "% - период " + strCurrentStartMoscow + " - " + strCurrentFinishMoscow + " , " + prop.getProperty("tag" + t + ".name");
 
-                    //для профиля
-                    double seconds = Utils.getSecondsBetween(time, Utils.sumTime(time, duration));
+                //считаем количество родительских скриптов
+                int scripts_count = 1;
+                while (prop.getProperty("s" + scripts_count + ".name") != null) {
+                    scripts_count++;
+                }
+                //dont touch
+                scripts_count--;
 
-                    //по количеству запросов
-                    JSONArray ja = new JSONArray();
-                    for (int s = 1; s < Integer.parseInt(prop.getProperty("sql.count")) + 1; s++) {
-                        //заполняем запрос
-                        String sql = prop.getProperty("sql" + s + ".query");
-                        sql = sql.replaceAll("__start__", strCurrentStart);
-                        sql = sql.replaceAll("__finish__", strCurrentFinish);
-                        sql = sql.replaceAll("__function__", prop.getProperty("tag" + t + ".function." + prop.getProperty("sql" + s + ".type")));
-                        sql = sql.replaceAll("__script__", prop.getProperty("sql" + s + ".script"));
-                        sql = sql.replaceAll("__column__", prop.getProperty("sql" + s + ".column"));
-                        System.out.println("sql[" + s + "]=" + sql);
-                        //выполняем запрос
-                        qr = influxDB.query(new Query(sql, prop.getProperty("influx.database")));
+                //считаем количество sql
+                int sql_count = 1;
+                while (prop.getProperty("sql" + sql_count + ".query") != null) {
+                    sql_count++;
+                }
+                //dont touch
+                sql_count--;
 
-                        //по серии ответа (по сути идём по скриптам, по которым сгруппирован запрос)
-                        if (qr.getResults().get(0).getSeries() != null) {
-                            for (QueryResult.Series sr : qr.getResults().get(0).getSeries()) {
+                //заполняем json даными из конфига и аргументов
+                JSONArray stats = new JSONArray();
+                double tps = 0;
+                for (int i = 1; i < scripts_count + 1; i++) {
+                    JSONObject jscript = new JSONObject();
 
-                                String script_json = sr.getTags().get(prop.getProperty("sql" + s + ".script"));
-                                String script_metric = "";
-                                Double script_value = 0.0;
+                    jscript.put("script", prop.getProperty("s" + i + ".name"));
+                    jscript.put("sla", Double.parseDouble(prop.getProperty("s" + i + ".sla")));
+                    jscript.put("profile", Double.parseDouble(prop.getProperty("s" + i + ".tps")) * seconds * Double.parseDouble(profile) / 100.0);
 
-                                //проходимся и находим столбец, указанный для этого запроса в sql.column
-                                int vol_i = 0;
-                                for (String col : sr.getColumns()) {
-                                    if (col.equalsIgnoreCase(prop.getProperty("sql" + s + ".column"))) {
-                                        //System.out.println("col=" + col);
-                                        script_metric = col;
-                                        break;
-                                    }
-                                    vol_i++;
+                    int child_id = 1;
+                    JSONArray childs = new JSONArray();
+                    while (prop.getProperty("s" + i + ".c" + child_id + ".name") != null) {
+                        JSONObject child = new JSONObject();
+                        child.put("script", prop.getProperty("s" + i + ".c" + child_id + ".name"));
+                        child.put("sla", Double.parseDouble(prop.getProperty("s" + i + ".c" + child_id + ".sla")));
+                        child.put("profile", Double.parseDouble(prop.getProperty("s" + i + ".c" + child_id + ".tps")) * seconds * Double.parseDouble(profile) / 100.0);
+                        childs.put(child);
+                        child_id++;
+                    }
+                    jscript.put("child_list", childs);
+
+                    stats.put(jscript);
+                    tps += Double.parseDouble(prop.getProperty("s" + i + ".tps"));
+                }
+                jo_period.put("stats", stats);
+                jo_period.put("tps", tps * Double.parseDouble(profile) / 100.0);
+
+
+                //заполнили json, теперь запросы в influx
+
+                for (int s = 1; s < sql_count + 1; s++) {
+                    String sql = prop.getProperty("sql" + s + ".query");
+                    String sql_type = prop.getProperty("sql" + s + ".type");
+                    sql = sql.replaceAll("__start__", strCurrentStart);
+                    sql = sql.replaceAll("__finish__", strCurrentFinish);
+                    System.out.println("sql " + sql_type + "\t[" + s + "] = " + sql);
+                    String sql_column = prop.getProperty("sql" + s + ".query").split(" GROUP BY ")[1].replaceAll("\"", "");
+
+                    //выполняем запрос
+                    qr = influxDB.query(new Query(sql, prop.getProperty("influx.database")));
+                    if (qr.getResults().get(0).getSeries() != null) {
+                        System.out.println("query results" + "\t[" + s + "] = " + qr.getResults() + "\r\n");
+                        HashMap<String, Double> result = new HashMap<>();
+                        for (QueryResult.Series sr : qr.getResults().get(0).getSeries()) {
+                            int influx_column_id = sr.getColumns().indexOf(sql_type);
+                            result.put(sr.getTags().get(sql_column), Double.parseDouble(sr.getValues().get(0).get(influx_column_id).toString()));
+                        }
+
+                        if (sql_type.equalsIgnoreCase("pass_count") || sql_type.equalsIgnoreCase("fail_count")) {
+                            for (int i = 0; i < jo_period.getJSONArray("stats").length(); i++) {
+                                String current_script = jo_period.getJSONArray("stats").getJSONObject(i).getString("script");
+
+                                //для parent
+                                if (result.containsKey(current_script)) {
+                                    jo_period.getJSONArray("stats").getJSONObject(i).put(sql_type, result.get(current_script));
                                 }
-
-                                //парсим значение столбца, который нашли в прошлом шаге
-                                for (List<Object> vol : sr.getValues()) {
-                                    //System.out.println("vol=" + vol.get(vol_i).toString());
-                                    script_value = Double.parseDouble(vol.get(vol_i).toString());
-                                }
-
-                                //System.out.println("\njson=");
-                                //System.out.println("script_json=" + script_json);
-                                //System.out.println("script_metric=" + script_metric);
-                                //System.out.println("script_value=" + script_value);
-
-                                //заполняем значениями json по скрипту
-
-                                if (prop.getProperty(script_json + ".sla") != null &&
-                                        prop.getProperty(script_json + ".profile") != null) {
-
-                                    JSONObject jo = new JSONObject();
-                                    jo.put("script", script_json);
-                                    jo.put("tag", tag);
-                                    jo.put(script_metric, script_value);
-
-                                    //берём sla для скрипта из конфига
-
-                                    Double sla = Double.parseDouble(prop.getProperty(script_json + ".sla"));
-                                    if (sla != null) {
-                                        jo.put("sla", sla);
-                                    }
-
-                                    //берём профиль для скрипта из конфига
-                                    String profile_calc = prop.getProperty(script_json + ".profile");
-                                    //System.out.println("profile_calc="+profile_calc);
-                                    //System.out.println("profile="+profile);
-                                    //System.out.println("seconds="+seconds);
-
-                                    //расчитываем профиль
-                                    if (profile_calc != null) {
-                                        long profile_teor = Math.round(Double.parseDouble(profile_calc) * Double.parseDouble(profile) / 100.0 * seconds);
-                                        jo.put("profile", profile_teor);
-                                    }
-
-                                    //дополняем значениями из нового запросоа уже существующий json по скрипту
-                                    boolean found = false;
-                                    for (int j = 0; j < ja.length(); j++) {
-                                        JSONObject localjo = ja.getJSONObject(j);
-                                        if (localjo.getString("script").equals(script_json)) {
-                                            ja.getJSONObject(j).put(script_metric, script_value);
-                                            found = true;
-                                            break;
+                                //для childs
+                                // всё тоже самое, что и для parents, но в обращении добавилось .getJSONArray("child_list").getJSONObject(c), а current_script заменилось на current_child
+                                if (!jo_period.getJSONArray("stats").getJSONObject(i).isNull("child_list") &&
+                                        jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").length() > 0) {
+                                    for (int c = 0; c < jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").length(); c++) {
+                                        String current_child = jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).getString("script");
+                                        if (result.containsKey(current_child)) {
+                                            jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).put(sql_type, result.get(current_child));
                                         }
                                     }
-                                    //если скрипта не было в массиве - кладём всё
-                                    if (!found) {
-                                        ja.put(jo);
-                                    }
                                 }
-                                //System.out.println("jo=" + jo.toString());
                             }
+                        }//конец для pass_count и fail_count
+
+                        //для времён добавляем json со статистикой
+                        if (sql_type.equalsIgnoreCase("pass_time") || sql_type.equalsIgnoreCase("fail_time")) {
+                            String current_tag = prop.getProperty("sql" + s + ".tag");
+                            for (int i = 0; i < jo_period.getJSONArray("stats").length(); i++) {
+                                String current_script = jo_period.getJSONArray("stats").getJSONObject(i).getString("script");
+
+                                //для parent
+                                if (result.containsKey(current_script)) {
+                                    //если stat_time уже есть
+                                    if (!jo_period.getJSONArray("stats").getJSONObject(i).isNull("stat_time")) {
+                                        boolean st_added = false;
+                                        //по всем stat_time
+                                        for (int st = 0; st < jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("stat_time").length(); st++) {
+                                            //если найден тэг
+                                            if (jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("stat_time").getJSONObject(st).getString("tag").equalsIgnoreCase(current_tag)) {
+                                                jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("stat_time").getJSONObject(st).put(sql_type, result.get(current_script));
+                                                st_added = true;
+                                                break;
+                                            }
+                                        }
+                                        //если stat_time существовали, но тега такого не было
+                                        if (!st_added) {
+                                            JSONObject stat_time = new JSONObject();
+                                            stat_time.put("tag", current_tag);
+                                            stat_time.put(sql_type, result.get(current_script));
+                                            jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("stat_time").put(stat_time);
+                                        }
+                                    }
+                                    // если stat_time не существует
+                                    else {
+                                        JSONObject stat_time = new JSONObject();
+                                        stat_time.put("tag", current_tag);
+                                        stat_time.put(sql_type, result.get(current_script));
+
+                                        JSONArray ja_stat_time = new JSONArray();
+                                        ja_stat_time.put(stat_time);
+
+                                        jo_period.getJSONArray("stats").getJSONObject(i).put("stat_time", ja_stat_time);
+
+                                    }
+                                }//конец для parent
+
+                                //по childs
+                                //всё тоже самое, что и для parents, но в обращении добавилось .getJSONArray("child_list").getJSONObject(c), а current_script заменилось на current_child
+                                if (!jo_period.getJSONArray("stats").getJSONObject(i).isNull("child_list") &&
+                                        jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").length() > 0) {
+                                    for (int c = 0; c < jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").length(); c++) {
+                                        String current_child = jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).getString("script");
+                                        if (result.containsKey(current_child)) {
+                                            //если stat_time уже есть
+                                            if (!jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).isNull("stat_time")) {
+                                                boolean st_added = false;
+                                                //по всем stat_time
+                                                for (int st = 0; st < jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).getJSONArray("stat_time").length(); st++) {
+                                                    //если найден тэг
+                                                    if (jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).getJSONArray("stat_time").getJSONObject(st).getString("tag").equalsIgnoreCase(current_tag)) {
+                                                        jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).getJSONArray("stat_time").getJSONObject(st).put(sql_type, result.get(current_child));
+                                                        st_added = true;
+                                                        break;
+                                                    }
+                                                }
+                                                //если stat_time существовали, но тега такого не было
+                                                if (!st_added) {
+                                                    JSONObject stat_time = new JSONObject();
+                                                    stat_time.put("tag", current_tag);
+                                                    stat_time.put(sql_type, result.get(current_child));
+                                                    jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).getJSONArray("stat_time").put(stat_time);
+                                                }
+                                            }
+                                            // если stat_time не существует
+                                            else {
+                                                JSONObject stat_time = new JSONObject();
+                                                stat_time.put("tag", current_tag);
+                                                stat_time.put(sql_type, result.get(current_child));
+
+                                                JSONArray ja_stat_time = new JSONArray();
+                                                ja_stat_time.put(stat_time);
+
+                                                jo_period.getJSONArray("stats").getJSONObject(i).getJSONArray("child_list").getJSONObject(c).put("stat_time", ja_stat_time);
+
+                                            }
+                                        }
+                                    }//конец for childs
+                                }//конец if childs
+
+
+                            }
+
                         }
-                        //System.out.println("ja=" + ja.toString());
-                        //System.out.println("\nresult=" + qr.getResults().toString());
-                    }
-                    //закончили все запросы по этому тегу
-                    //добавляем в выходной массив
-                    for (int j = 0; j < ja.length(); j++) {
-                        fullja.put(ja.getJSONObject(j));
                     }
 
-                }//конец по тегу
 
+                }
+
+                fullja.put(jo_period);
             }//конец по периоду
 
             //пишем и сохраняем
             System.out.println("\nResult json=" + fullja.toString());
 
             Writer fstream = null;
-            //BufferedWriter out = null;
             fstream = new OutputStreamWriter(new FileOutputStream(prop.getProperty("out")), StandardCharsets.UTF_8);
             fstream.write(fullja.toString());
             fstream.close();
 
-            //file = new FileWriter(prop.getProperty("out"));
-            //file.write(fullja.toString());
-            //file.close();
             System.out.println("\nFile saved=" + prop.getProperty("out"));
 
             System.out.println("\n==========InfluxExporterJson finished==========");
@@ -258,11 +341,7 @@ public class Main {
 
     public static void ReadProps(String config) {
         try {
-            //prop.load(new InputStreamReader(Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties"), Charset.forName("UTF-8")));
-            //InputStream input = new FileInputStream(config);
             prop.load(new InputStreamReader(new FileInputStream(config), StandardCharsets.UTF_8));
-            //prop.load(input);
-            //input.close();
             System.out.println("\nGet config, unsorted:");
             Enumeration keys = prop.keys();
             while (keys.hasMoreElements()) {
@@ -277,13 +356,10 @@ public class Main {
 
     //создание фолдера для результатов
     private static void CreatefolderFilePath() {
-        //String firstTime = args.get("times").get(0).replace(":", "_").replace("-", "_");
         String outdir = args.get("out").get(0);
         String outname = args.get("name").get(0);
         try {
-            //String folderName = Utils.getFolder();
             Files.createDirectories(Paths.get(outdir));
-            //String folderFilePath = outdir + "\\" + folderName + "\\" + outname + "_" + firstTime + ".json";
             String folderFilePath = outdir + "\\" + outname;
             prop.put("out", folderFilePath);
         } catch (Exception ex) {

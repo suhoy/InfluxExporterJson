@@ -36,6 +36,17 @@ public class Utils {
         return outUTC;
     }
 
+    //json format for moscow time
+    public static String convertToSimpleMoscowJson(String dateMoscow) {
+        DateTimeFormatter DATE_TIME_FORMATTER_INPUT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX");
+        DateTimeFormatter DATE_TIME_FORMATTER_OUTPUT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+        dateMoscow = dateMoscow + "+00:00";
+        OffsetDateTime dateOff = OffsetDateTime.parse(dateMoscow, DATE_TIME_FORMATTER_INPUT);
+        OffsetDateTime dateUTC = dateOff.withOffsetSameInstant(ZoneOffset.UTC);
+        String outUTC = dateUTC.format(DATE_TIME_FORMATTER_OUTPUT);
+        return outUTC;
+    }
+
     //sout листа массива
     public static void writeItOut(List<String[]> strOut) {
         System.out.println("\r\n");
