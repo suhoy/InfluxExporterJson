@@ -4,8 +4,8 @@ influx.user=admin
 influx.password=admin
 influx.database=jrunner
 
-
-#sql.scripts=SELECT count(*) FROM "jrunner"."autogen"."times" WHERE time > '__start__' AND time < '__finish__' GROUP BY "script"
+#query should be grouped by one tag and returning one field
+#pass_count, fail_count, pass_time and fail_time are constants
 
 sql1.type=pass_count
 sql1.query=SELECT count("count") as "pass_count" FROM "jrunner"."autogen"."times" WHERE "status" = 'true' and  time > '__start__' AND time < '__finish__' GROUP BY "script"
@@ -30,16 +30,17 @@ sql6.query=SELECT (percentile("resp", 99.9))/1000 as "fail_time" FROM "jrunner".
 sql6.tag=99.9%
 
 #scripts list, profile in tps 100%, scripts names should be unique
+# "s1" - parent script, it has 1 child - "c1"
 
 s1.name=Correlation_Challenge_Mod
 s1.tps=2
 s1.sla=1.5
 
-#s1.c1.name=ex0
-#s1.c1.tps=4
-#s1.c1.sla=2.5
+s1.c1.name=ex0
+s1.c1.tps=4
+s1.c1.sla=2.5
 
-s2.name=ex0
-s2.tps=4
-s2.sla=2.5
+#s2.name=ex0
+#s2.tps=4
+#s2.sla=2.5
 

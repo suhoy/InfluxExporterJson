@@ -31,125 +31,143 @@ influx.user=admin
 influx.password=admin
 influx.database=dbname
 
+#connection data
+influx.url=http://localhost:8086
+influx.user=admin
+influx.password=admin
+influx.database=jrunner
 
-sql.count=4
-#sql pass count
-sql1.type=count
-sql1.query=SELECT __function__ as "__column__" FROM "dbname"."autogen"."tablename" WHERE "status" = 'true' and  time > '__start__' AND time < '__finish__' GROUP BY "__script__"
-sql1.column=pass_count
-sql1.script=script
+#query should be grouped by one tag and returning one field
+#pass_count, fail_count, pass_time and fail_time are constants
 
-#sql fail count
-sql2.type=count
-sql2.query=SELECT __function__ as "__column__" FROM "dbname"."autogen"."tablename" WHERE "status" = 'false' and  time > '__start__' AND time < '__finish__' GROUP BY "__script__"
-sql2.column=fail_count
-sql2.script=script
+sql1.type=pass_count
+sql1.query=SELECT count("count") as "pass_count" FROM "dbname"."autogen"."tablename" WHERE "status" = 'true' and  time > '__start__' AND time < '__finish__' GROUP BY "script"
 
-#sql pass time
-sql3.type=time
-sql3.query=SELECT __function__ as "__column__" FROM "dbname"."autogen"."tablename" WHERE "status" = 'true' and  time > '__start__' AND time < '__finish__' GROUP BY "__script__"
-sql3.column=pass_time
-sql3.script=script
+sql2.type=fail_count
+sql2.query=SELECT count("count") as "fail_count" FROM "dbname"."autogen"."tablename" WHERE "status" = 'false' and  time > '__start__' AND time < '__finish__' GROUP BY "script"
 
-#sql fail time
-sql4.type=time
-sql4.query=SELECT __function__ as "__column__" FROM "dbname"."autogen"."tablename" WHERE "status" = 'false' and  time > '__start__' AND time < '__finish__' GROUP BY "__script__"
-sql4.column=fail_time
-sql4.script=script
+sql3.type=pass_time
+sql3.query=SELECT (percentile("resp", 99.5))/1000 as "pass_time" FROM "dbname"."autogen"."tablename" WHERE "status" = 'true' and  time > '__start__' AND time < '__finish__' GROUP BY "script"
+sql3.tag=99.5%
 
-#tags
-tags.count=2
-tag1.name=99.5% времен отклика
-tag1.function.count=count("count")
-tag1.function.time=(percentile("resp", 99.5))/1000
+sql4.type=fail_time
+sql4.query=SELECT (percentile("resp", 99.5))/1000 as "fail_time" FROM "dbname"."autogen"."tablename" WHERE "status" = 'false' and  time > '__start__' AND time < '__finish__' GROUP BY "script"
+sql4.tag=99.5%
 
-tag2.name=99.9% времен отклика
-tag2.function.count=count("count")
-tag2.function.time=(percentile("resp", 99.9))/1000
+sql5.type=pass_time
+sql5.query=SELECT (percentile("resp", 99.9))/1000 as "pass_time" FROM "dbname"."autogen"."tablename" WHERE "status" = 'true' and  time > '__start__' AND time < '__finish__' GROUP BY "script"
+sql5.tag=99.9%
 
+sql6.type=fail_time
+sql6.query=SELECT (percentile("resp", 99.9))/1000 as "fail_time" FROM "dbname"."autogen"."tablename" WHERE "status" = 'false' and  time > '__start__' AND time < '__finish__' GROUP BY "script"
+sql6.tag=99.9%
 
-#profile in tps 100%, scripts names should be unique
-sript1name.profile=2
-sript1name.sla=1.5
+#scripts list, profile in tps 100%, scripts names should be unique
+# "s1" - parent script, it has 1 child - "c1"
 
-sript2name123.profile=4
-sript2name123.sla=2.5
+s1.name=Correlation_Challenge_Mod
+s1.tps=2
+s1.sla=1.5
+
+s1.c1.name=ex0
+s1.c1.tps=4
+s1.c1.sla=2.5
 ```
 
 ### Output example
 ```json
 [
 	{
-		"script": "sript1name",
-		"tag": "Период 20:55 12.01.22 - 21:00 12.01.22 , 99.5% времен отклика",
-		"pass_count": 478,
-		"sla": 1.5,
-		"profile": 600,
-		"fail_count": 120,
-		"pass_time": 1.867,
-		"fail_time": 1.827
+		"time_start": "2022-01-12T20:55",
+		"time_finish": "2022-01-12T21:00",
+		"profile": 100,
+		"about": "",
+		"stats": [
+			{
+				"script": "Correlation_Challenge_Mod",
+				"sla": 1.5,
+				"profile": 600,
+				"child_list": [
+					{
+						"script": "ex0",
+						"sla": 2.5,
+						"profile": 1200,
+						"pass_count": 1199,
+						"stat_time": [
+							{
+								"tag": "99.5%",
+								"pass_time": 2.499
+							},
+							{
+								"tag": "99.9%",
+								"pass_time": 2.5
+							}
+						]
+					}
+				],
+				"pass_count": 478,
+				"fail_count": 120,
+				"stat_time": [
+					{
+						"tag": "99.5%",
+						"pass_time": 1.867,
+						"fail_time": 1.827
+					},
+					{
+						"tag": "99.9%",
+						"pass_time": 1.992,
+						"fail_time": 1.957
+					}
+				]
+			}
+		],
+		"tps": 2
 	},
 	{
-		"script": "sript2name123",
-		"tag": "Период 20:55 12.01.22 - 21:00 12.01.22 , 99.5% времен отклика",
-		"pass_count": 1199,
-		"sla": 2.5,
-		"profile": 1200,
-		"pass_time": 2.499
-	},
-	{
-		"script": "sript1name",
-		"tag": "Период 20:55 12.01.22 - 21:00 12.01.22 , 99.9% времен отклика",
-		"pass_count": 478,
-		"sla": 1.5,
-		"profile": 600,
-		"fail_count": 120,
-		"pass_time": 1.992,
-		"fail_time": 1.957
-	},
-	{
-		"script": "sript2name123",
-		"tag": "Период 20:55 12.01.22 - 21:00 12.01.22 , 99.9% времен отклика",
-		"pass_count": 1199,
-		"sla": 2.5,
-		"profile": 1200,
-		"pass_time": 2.5
-	},
-	{
-		"script": "sript1name",
-		"tag": "Период 21:01 12.01.22 - 21:06 12.01.22 , 99.5% времен отклика",
-		"pass_count": 987,
-		"sla": 1.5,
-		"profile": 1200,
-		"fail_count": 210,
-		"pass_time": 1.861,
-		"fail_time": 1.738
-	},
-	{
-		"script": "sript2name123",
-		"tag": "Период 21:01 12.01.22 - 21:06 12.01.22 , 99.5% времен отклика",
-		"pass_count": 2403,
-		"sla": 2.5,
-		"profile": 2400,
-		"pass_time": 2.498
-	},
-	{
-		"script": "sript1name",
-		"tag": "Период 21:01 12.01.22 - 21:06 12.01.22 , 99.9% времен отклика",
-		"pass_count": 987,
-		"sla": 1.5,
-		"profile": 1200,
-		"fail_count": 210,
-		"pass_time": 2.319,
-		"fail_time": 2.218
-	},
-	{
-		"script": "sript2name123",
-		"tag": "Период 21:01 12.01.22 - 21:06 12.01.22 , 99.9% времен отклика",
-		"pass_count": 2403,
-		"sla": 2.5,
-		"profile": 2400,
-		"pass_time": 2.5
+		"time_start": "2022-01-12T21:01",
+		"time_finish": "2022-01-12T21:06",
+		"profile": 200,
+		"about": "",
+		"stats": [
+			{
+				"script": "Correlation_Challenge_Mod",
+				"sla": 1.5,
+				"profile": 1200,
+				"child_list": [
+					{
+						"script": "ex0",
+						"sla": 2.5,
+						"profile": 2400,
+						"pass_count": 2403,
+						"stat_time": [
+							{
+								"tag": "99.5%",
+								"pass_time": 2.498
+							},
+							{
+								"tag": "99.9%",
+								"pass_time": 2.5
+							}
+						]
+					}
+				],
+				"pass_count": 987,
+				"fail_count": 210,
+				"stat_time": [
+					{
+						"tag": "99.5%",
+						"pass_time": 1.861,
+						"fail_time": 1.738
+					},
+					{
+						"tag": "99.9%",
+						"pass_time": 2.319,
+						"fail_time": 2.218
+					}
+				]
+			}
+		],
+		"tps": 4
 	}
 ]
 ```
