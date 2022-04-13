@@ -36,11 +36,11 @@ s1.name=Correlation_Challenge_Mod
 s1.tps=2
 s1.sla=1.5
 
-s1.c1.name=ex0
-s1.c1.tps=4
-s1.c1.sla=2.5
+#s1.c1.name=ex0
+#s1.c1.tps=4
+#s1.c1.sla=2.5
 
-#s2.name=ex0
-#s2.tps=4
-#s2.sla=2.5
+s2.name=ex0
+s2.tps=4
+s2.sla=2.5
 

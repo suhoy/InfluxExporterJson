@@ -136,6 +136,9 @@ public class Main {
                     jscript.put("script", prop.getProperty("s" + i + ".name"));
                     jscript.put("sla", Double.parseDouble(prop.getProperty("s" + i + ".sla")));
                     jscript.put("profile", Double.parseDouble(prop.getProperty("s" + i + ".tps")) * seconds * Double.parseDouble(profile) / 100.0);
+                    jscript.put("pass_count", 0);
+                    jscript.put("fail_count", 0);
+                    jscript.put("stat_time",new JSONArray());
 
                     int child_id = 1;
                     JSONArray childs = new JSONArray();
@@ -144,6 +147,10 @@ public class Main {
                         child.put("script", prop.getProperty("s" + i + ".c" + child_id + ".name"));
                         child.put("sla", Double.parseDouble(prop.getProperty("s" + i + ".c" + child_id + ".sla")));
                         child.put("profile", Double.parseDouble(prop.getProperty("s" + i + ".c" + child_id + ".tps")) * seconds * Double.parseDouble(profile) / 100.0);
+                        child.put("pass_count", 0);
+                        child.put("fail_count", 0);
+                        child.put("stat_time",new JSONArray());
+
                         childs.put(child);
                         child_id++;
                     }
