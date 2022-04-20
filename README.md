@@ -1,6 +1,6 @@
 # InfluxExporterJson
 Export influx data to json  
-Part of [data collector](https://github.com/suhoy/TestUploader) for [load testing hub](https://github.com/suhoy/cms-boot)   
+Part of [data collector](https://github.com/suhoy/TestUploader) for [load testing hub](https://github.com/suhoy/LoadTestingHubPublic)   
 Works with influx v1.8 and java 8   
 
 ### Arguments
